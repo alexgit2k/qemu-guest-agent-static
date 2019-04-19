@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# qemu-ga	Starts the qemu-guest-agent daemon
+#
+# chkconfig: 10 10 10
+# description: Qemu Guest Agent
+
+DAEMON=/usr/local/bin/qemu-ga
+prog=`basename $DAEMON`
+initdir=/etc/rc.d/init.d
+lockdir=/var/lock/subsys
+
+ 
+. $initdir/functions
+ 
+RETVAL=0
+
+#
+# See how we were called.
+#
+
+start() {
+	test -x $DAEMON || exit 5
+	echo -n $"Starting $prog daemon: "
+	daemon $DAEMON
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch $lockdir/$prog
+	echo
+}
+
+stop() {
+	echo -n $"Stopping $prog daemon: "
+	killproc $DAEMON
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && rm -f $lockdir/$prog
+	echo
+}
+
+restart() {
+	stop
+	start
+}	
+
+case "$1" in
+start)
+	start
+	;;
+stop)
+	stop
+	;;
+restart)
+	restart
+	;;
+condrestart|try-restart)
+	if [ -f $lockdir/$prog ]; then
+	    restart
+	fi
+	;;
+status)
+	status $prog
+	RETVAL=$?
+	;;
+*)
+	echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+	RETVAL=2
+esac
+
+exit $RETVAL
